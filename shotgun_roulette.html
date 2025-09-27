@@ -3,8 +3,8 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>ショットガン・ルーレット ver.α0.13</title>
-  <link rel="stylesheet" href="shotgun_roulette_alpha0_13.css">
+  <title>ショットガン・ルーレット ver.α0.14</title>
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
   <!-- 固定ヘルプ（左端 ? ボタン） -->
@@ -28,7 +28,7 @@
     <nav class="nav">
       <a href="#/game" id="navGame" class="nav-link">ゲーム</a>
       <a href="#/settings" id="navSettings" class="nav-link">ゲーム設定</a>
-      <span class="ver">ver.α0.13</span>
+      <span class="ver">ver.α0.14</span>
     </nav>
   </header>
 
@@ -124,7 +124,7 @@
       </div>
     </section>
 
-    <footer class="footer">バージョン: α0.13 — SPA(ゲーム/ゲーム設定)・アイテム説明・残薬室の非表示オプション</footer>
+    <footer class="footer">バージョン: α0.14 — syncSoundUI修正・画像の正方形化（白背景）・ファイル名リネーム</footer>
   </main>
 
   <!-- ビュー: ゲーム設定 -->
@@ -150,7 +150,7 @@
     </div>
   </main>
 
-  <!-- 設定モーダル（UI画像・サウンドは従来と同じ、ゲーム設定は別ページで管理） -->
+  <!-- 設定モーダル -->
   <div id="settingsModal" class="modal hidden">
     <div id="settingsBackdrop" class="backdrop"></div>
     <div id="settingsPanel" class="panel modal-panel">
@@ -212,7 +212,7 @@
       </div>
 
       <div class="mt12 modal-foot">
-        <div class="small muted">保存先キー: <b>sg_roulette_theme_v013</b></div>
+        <div class="small muted">保存先キー: <b>sg_roulette_theme_v014</b></div>
         <div class="row">
           <button id="saveTheme" class="btn">保存</button>
           <button id="exportTheme" class="btn">エクスポート</button>
@@ -229,6 +229,6 @@
   <audio id="sndLive" preload="auto"></audio>
   <audio id="sndClick" preload="auto"></audio>
 
-  <script src="shotgun_roulette_alpha0_13.js"></script>
+  <script src="script.js"></script>
 </body>
 </html>

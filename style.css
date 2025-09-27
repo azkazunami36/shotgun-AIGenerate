@@ -42,22 +42,34 @@ a{color:inherit; text-decoration:none}
 .view{padding:16px}
 .panel{
   background:var(--panel); background-image:var(--panel-image);
-  background-size:cover; background-position:center;
+  background-size:contain; background-position:center; /* don't crop panel texture */
   padding:12px; border-radius:8px; box-shadow:0 2px 6px rgba(0,0,0,.6);
 }
 .grid{display:grid; grid-template-columns:1fr 1fr; gap:12px}
 .row{display:flex; gap:8px; align-items:center; flex-wrap:wrap}
-.preview{width:100%; height:120px; background:#000 center/cover no-repeat; border-radius:6px; border:1px solid #333;}
+.preview{width:100%; height:120px; background:#000 center/contain no-repeat; border-radius:6px; border:1px solid #333;}
 .toolbar{display:flex; gap:8px; align-items:center; flex-wrap:wrap; margin-bottom:12px}
 .controls, .game{display:flex; gap:16px; margin-bottom:12px; flex-wrap:wrap}
 .players{display:flex; gap:12px; flex-wrap:wrap}
+
+/* Square-safe images for avatars & icons */
 .player{padding:8px; border-radius:6px; background:#141414; min-width:200px; display:grid; grid-template-columns:48px 1fr; grid-gap:8px; align-items:center}
 .player.dead{opacity:0.35; text-decoration:line-through}
-.avatar{width:48px; height:48px; border-radius:6px; background:#000 center/cover no-repeat}
+.avatar{
+  width:48px; height:48px; border-radius:6px;
+  background:#fff center/contain no-repeat;  /* white square, contain image */
+  border:1px solid #333;
+}
+.icon-preview, .item .icon{
+  background:#fff center/contain no-repeat;  /* white square, contain */
+  border:1px solid #333;
+}
+.icon-preview{width:24px; height:24px; border-radius:4px; display:inline-block; vertical-align:middle}
+.item{display:inline-flex; align-items:center; gap:6px; padding:4px 6px; margin:4px 4px 0 0; background:#222; border-radius:6px; font-size:13px}
+.item .icon{width:16px; height:16px; border-radius:3px; display:inline-block}
+
 .hp{font-weight:700; color:#ffb3b3}
 .items{margin-top:8px}
-.item{display:inline-flex; align-items:center; gap:6px; padding:4px 6px; margin:4px 4px 0 0; background:#222; border-radius:6px; font-size:13px}
-.item .icon{width:16px; height:16px; background:center/cover no-repeat}
 .log{height:240px; overflow:auto; background:#0f0f0f; padding:8px; border-radius:6px; font-size:13px}
 .chamber{font-size:13px; color:#ccc; margin-top:8px}
 .big{font-size:16px}
@@ -73,7 +85,6 @@ a{color:inherit; text-decoration:none}
 .modal-panel{position:relative; width:min(980px,94vw); max-height:90vh; overflow:auto}
 .modal-head{display:flex; justify-content:space-between; align-items:center; margin-bottom:8px}
 .modal-foot{display:flex; justify-content:space-between; align-items:center}
-.icon-preview{width:24px; height:24px; background:#000 center/cover no-repeat; border-radius:4px; border:1px solid #333; display:inline-block; vertical-align:middle}
 
 /* Volume */
 .volrow{display:flex; align-items:center; gap:8px}
