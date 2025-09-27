@@ -1,7 +1,7 @@
 class ShotgunRouletteApp {
   constructor() {
-    // Constants, defaults, and state
-    this.THEME_KEY = "sg_roulette_theme_v012";
+    // Theme
+    this.THEME_KEY = "sg_roulette_theme_v013";
     this.defaultTheme = {
       flashColor: "#ffffff",
       background: null,
@@ -12,6 +12,11 @@ class ShotgunRouletteApp {
     };
     this.theme = JSON.parse(JSON.stringify(this.defaultTheme));
 
+    // Game options (separate page)
+    this.GAME_OPTS_KEY = "sg_roulette_gameopts_v013";
+    this.gameOpts = { hideChamberRemain: false };
+
+    // Game state
     this.ITEMS = ["ノコギリ","拡大鏡","ビール","タバコ","手錠"];
     this.state = {
       players: [], playerCount: 4, initHp: 5,
@@ -19,17 +24,39 @@ class ShotgunRouletteApp {
       currentIndex: 0, peekInfo: null, autoNextOnEmptySelfShot: true
     };
 
-    // prebind helpers
-    this.el = (id) => document.getElementById(id);
+    this.el = id => document.getElementById(id);
   }
 
-  /* ====== Boot ====== */
-  async boot() {
+  /* ===== Boot ===== */
+  async boot(){
+    // Routing
+    window.addEventListener("hashchange", ()=> this.route());
+    this.route(); // initial
+
     await this.loadAssetsThenLocal();
+    this.loadGameOpts();
     this.initUI();
   }
+  route(){
+    const hash = location.hash || "#/game";
+    const game = this.el("view-game");
+    const settings = this.el("view-settings");
+    const navGame = this.el("navGame");
+    const navSettings = this.el("navSettings");
+    [navGame,navSettings].forEach(n=>n.classList.remove("active"));
 
-  /* ====== Theme IO ====== */
+    if(hash.startsWith("#/settings")){
+      game.classList.add("hidden");
+      settings.classList.remove("hidden");
+      navSettings.classList.add("active");
+    } else {
+      settings.classList.add("hidden");
+      game.classList.remove("hidden");
+      navGame.classList.add("active");
+    }
+  }
+
+  /* ===== Theme IO ===== */
   async loadAssetsThenLocal(){
     try{
       const r = await fetch("assets/config.json", {cache:"no-store"});
@@ -71,7 +98,7 @@ class ShotgunRouletteApp {
   exportTheme(){
     const blob = new Blob([JSON.stringify(this.theme,null,2)], {type:"application/json"});
     const a = document.createElement("a"); a.href = URL.createObjectURL(blob);
-    a.download = "sg_roulette_theme_v012.json"; a.click(); URL.revokeObjectURL(a.href);
+    a.download = "sg_roulette_theme_v013.json"; a.click(); URL.revokeObjectURL(a.href);
   }
   importTheme(file){
     const fr = new FileReader();
@@ -106,58 +133,34 @@ class ShotgunRouletteApp {
     setVol("sndClick", m * vc);
   }
 
-  /* ====== UI ====== */
-  openSettings(){
-    this.el("bgPreview").style.backgroundImage = this.theme.background? `url(${this.theme.background})` : "none";
-    this.el("panelPreview").style.backgroundImage = this.theme.panel? `url(${this.theme.panel})` : "none";
-    this.el("flashColor").value = this.theme.flashColor || "#ffffff";
-    ["p1Prev","p2Prev","p3Prev","p4Prev"].forEach((id,i)=>{
-      const key = "P"+(i+1);
-      this.el(id).style.backgroundImage = this.theme.avatars[key]? `url(${this.theme.avatars[key]})` : "none";
-      this.el("p"+(i+1)+"Url").value = this.theme.avatars[key] || "";
-    });
-    const map = [["icoSaw","ノコギリ"],["icoGlass","拡大鏡"],["icoBeer","ビール"],["icoSmoke","タバコ"],["icoCuff","手錠"]];
-    map.forEach(([id,label])=>{
-      const prev = this.el(id+"Prev"); if(prev) prev.style.backgroundImage = this.theme.icons[label]? `url(${this.theme.icons[label]})` : "none";
-      this.el(id).value = this.theme.icons[label] || "";
-    });
-    this.syncSoundUI();
-    this.el("settingsModal").style.display = "flex";
+  /* ===== Game Options (Settings page) ===== */
+  loadGameOpts(){
+    try{
+      const s = localStorage.getItem(this.GAME_OPTS_KEY);
+      if(s){ this.gameOpts = { ...this.gameOpts, ...(JSON.parse(s)||{}) }; }
+    }catch(_){}
+    // Reflect to form if present
+    const cb = this.el("optHideChamberRemain");
+    if(cb) cb.checked = !!this.gameOpts.hideChamberRemain;
   }
-  closeSettings(){ this.el("settingsModal").style.display = "none"; }
-  syncSoundUI(){
-    this.el("sndBlankUrl").value = this.theme.sounds.blank || "";
-    this.el("sndLiveUrl").value  = this.theme.sounds.live  || "";
-    this.el("sndClickUrl").value = this.theme.sounds.click || "";
-    this.el("volMaster").value = this.theme.sounds.volume.master ?? 1;
-    this.el("volBlank").value  = this.theme.sounds.volume.blank ?? 1;
-    this.el("volLive").value   = this.theme.sounds.volume.live  ?? 1;
-    this.el("volClick").value  = this.theme.sounds.volume.click ?? 1;
-    this.el("volMasterLabel").textContent = Math.round((this.theme.sounds.volume.master ?? 1)*100) + "%";
-    this.el("volBlankLabel").textContent  = Math.round((this.theme.sounds.volume.blank ?? 1)*100) + "%";
-    this.el("volLiveLabel").textContent   = Math.round((this.theme.sounds.volume.live  ?? 1)*100) + "%";
-    this.el("volClickLabel").textContent  = Math.round((this.theme.sounds.volume.click ?? 1)*100) + "%";
-    this.el("volMasterToolbar").value = this.theme.sounds.volume.master ?? 1;
-    this.el("volMasterToolbarLabel").textContent = Math.round((this.theme.sounds.volume.master ?? 1)*100) + "%";
+  saveGameOpts(){
+    const cb = this.el("optHideChamberRemain");
+    this.gameOpts.hideChamberRemain = !!(cb && cb.checked);
+    localStorage.setItem(this.GAME_OPTS_KEY, JSON.stringify(this.gameOpts));
+    const res = this.el("saveGameOptsResult");
+    if(res){ res.textContent = "保存しました ✓"; setTimeout(()=>res.textContent="", 1600); }
   }
 
-  /* ====== Game Core ====== */
-  log(msg){
-    const l = this.el("log"); const time = new Date().toLocaleTimeString();
-    l.innerHTML = `<div>[${time}] ${this.escapeHtml(msg)}</div>` + l.innerHTML;
-  }
-  escapeHtml(s){ return s==null? "" : s.toString().replace(/&/g,'&amp;').replace(/</g,'&lt;'); }
-
-  flash(){
-    const f = this.el("flashOverlay"); f.style.animation = "flashEffect 0.28s ease";
-    f.onanimationend = () => { f.style.animation = ""; };
-  }
-  playSound(name){
-    const id = {blank:"sndBlank", live:"sndLive", click:"sndClick"}[name];
-    if(!id) return; const a = this.el(id);
-    if(a && a.src){ try{ a.currentTime = 0; a.play().catch(()=>{}); }catch(_e){} }
+  /* ===== Help panel ===== */
+  bindHelp(){
+    const panel = this.el("helpPanel");
+    const open = ()=>{ panel.classList.add("open"); panel.setAttribute("aria-hidden", "false"); };
+    const close = ()=>{ panel.classList.remove("open"); panel.setAttribute("aria-hidden", "true"); };
+    this.el("helpToggle").onclick = open;
+    this.el("helpClose").onclick = close;
   }
 
+  /* ===== UI ===== */
   strictClampInputs(){
     const clamp = (id, fn) => { const e = this.el(id); if(!e) return; e.addEventListener("change", ()=>{ e.value = fn(parseInt(e.value)); }); };
     clamp("playerCount", v => (!Number.isFinite(v)||v<2)?2:(v>4?4:v));
@@ -165,9 +168,16 @@ class ShotgunRouletteApp {
     clamp("chamberSize",v => (!Number.isFinite(v)||v<1)?1:(v>36?36:v));
     clamp("liveCount",  v => (!Number.isFinite(v)||v<0)?0:(v>36?36:v));
   }
-
   initUI(){
-    // Buttons
+    // Title → Game
+    this.el("startBtnTitle").addEventListener("click", ()=>{
+      this.playSound('click');
+      this.el("titleScreen").style.display = "none";
+      this.el("view-game").classList.remove("hidden");
+      this.startGame();
+    });
+
+    // Game controls
     this.el("startBtn").onclick = ()=> this.startGame();
     this.el("resetBtn").onclick = ()=> this.resetAll();
     this.el("shootBtn").onclick = ()=> this.performShoot(false);
@@ -175,15 +185,7 @@ class ShotgunRouletteApp {
     this.el("endTurnBtn").onclick = ()=> this.endTurn();
     this.el("clearLog").onclick = ()=> this.el("log").innerHTML = "";
 
-    // Title -> Game
-    this.el("startBtnTitle").addEventListener("click", ()=>{
-      this.playSound('click');
-      this.el("titleScreen").style.display = "none";
-      this.el("app").style.display = "block";
-      this.startGame();
-    });
-
-    // Settings
+    // UI settings modal
     this.el("openSettings").onclick = ()=>{ this.playSound('click'); this.openSettings(); };
     this.el("closeSettings").onclick = ()=> this.closeSettings();
     this.el("settingsBackdrop").onclick = ()=> this.closeSettings();
@@ -209,10 +211,7 @@ class ShotgunRouletteApp {
     };
     this.el("iconsApply").onclick = ()=>{
       const map = [["icoSaw","ノコギリ"],["icoGlass","拡大鏡"],["icoBeer","ビール"],["icoSmoke","タバコ"],["icoCuff","手錠"]];
-      map.forEach(([id,label]) => {
-        const url = (this.el(id).value || "").trim();
-        this.theme.icons[label] = url || null;
-      });
+      map.forEach(([id,label]) => { const url = (this.el(id).value || "").trim(); this.theme.icons[label] = url || null; });
       this.renderPlayers();
     };
 
@@ -248,9 +247,25 @@ class ShotgunRouletteApp {
     this.el("importTheme").onclick = ()=> this.el("importThemeFile").click();
     this.el("importThemeFile").onchange = (e)=>{ const f = e.target.files[0]; if(f) this.importTheme(f); };
 
-    // Strict clamping on inputs
+    // Game options page
+    const saveGameOptsBtn = this.el("saveGameOpts");
+    if(saveGameOptsBtn){ saveGameOptsBtn.onclick = ()=> this.saveGameOpts(); }
+
+    // Help panel
+    this.bindHelp();
+
+    // Strict clamping
     this.strictClampInputs();
   }
+
+  /* ===== Game Core ===== */
+  log(msg){
+    const l = this.el("log"); const time = new Date().toLocaleTimeString();
+    l.innerHTML = `<div>[${time}] ${this.escapeHtml(msg)}</div>` + l.innerHTML;
+  }
+  escapeHtml(s){ return s==null? "" : s.toString().replace(/&/g,'&amp;').replace(/</g,'&lt;'); }
+  flash(){ const f = this.el("flashOverlay"); f.style.animation = "flashEffect 0.28s ease"; f.onanimationend = () => { f.style.animation = ""; }; }
+  playSound(name){ const id = {blank:"sndBlank", live:"sndLive", click:"sndClick"}[name]; if(!id) return; const a = this.el(id); if(a && a.src){ try{ a.currentTime = 0; a.play().catch(()=>{}); }catch(_e){} } }
 
   resetAll(){
     this.state = {
@@ -301,13 +316,7 @@ class ShotgunRouletteApp {
     this.el("chamberTotal").innerText = s;
     this.el("chamberRemain").innerText = this.state.chamber.length;
   }
-  shuffle(a){
-    if(!Array.isArray(a)) return;
-    for(let i=a.length-1;i>0;i--){
-      const j = Math.floor(Math.random()*(i+1));
-      const t = a[i]; a[i] = a[j]; a[j] = t;
-    }
-  }
+  shuffle(a){ if(!Array.isArray(a)) return; for(let i=a.length-1;i>0;i--){ const j = Math.floor(Math.random()*(i+1)); const t = a[i]; a[i] = a[j]; a[j] = t; } }
   distributeItemsToAll(){
     for(const p of this.state.players){
       if(!p.alive) continue;
@@ -378,8 +387,14 @@ class ShotgunRouletteApp {
 
   updateUI(){
     this.el("roundNo").innerText = this.state.round;
-    this.el("chamberRemain").innerText = this.state.chamber.length;
-    this.el("chamberTotal").innerText = this.state.chamberTotal;
+    // 残薬室の表示制御
+    if(this.gameOpts.hideChamberRemain){
+      this.el("chamberRemain").innerText = "??";
+      this.el("chamberTotal").innerText = this.state.chamberTotal;
+    }else{
+      this.el("chamberRemain").innerText = this.state.chamber.length;
+      this.el("chamberTotal").innerText = this.state.chamberTotal;
+    }
     this.el("currentPlayer").innerText = this.state.players[this.state.currentIndex]? this.state.players[this.state.currentIndex].name : "-";
     this.el("peekState").innerText = this.state.peekInfo ? (this.state.peekInfo==="live"? "実弾":"空包") : "不明";
     this.renderPlayers();
@@ -430,7 +445,9 @@ class ShotgunRouletteApp {
     const top = this.state.chamber.shift();
     this.state.peekInfo = null;
     this.el("peekArea").innerText = "なし";
-    this.el("chamberRemain").innerText = this.state.chamber.length;
+    if(!this.gameOpts.hideChamberRemain){
+      this.el("chamberRemain").innerText = this.state.chamber.length;
+    }
 
     if(top === "blank"){
       this.playSound('blank');
@@ -494,6 +511,7 @@ class ShotgunRouletteApp {
     this.announceTurn();
   }
 
+  /* ===== Items ===== */
   useItem(pid, idx){
     const p = this.state.players[pid];
     if(!p || !p.alive){ alert("使用不可"); return; }
@@ -516,10 +534,12 @@ class ShotgunRouletteApp {
         else {
           const removed = this.state.chamber.shift();
           this.log(`${p.name} は ビール を使用し、次の弾を排莢した（${removed==="live"?"実弾が取り除かれた":"空包が取り除かれた"}）。`);
-          this.el("chamberRemain").innerText = this.state.chamber.length;
+          if(!this.gameOpts.hideChamberRemain){
+            this.el("chamberRemain").innerText = this.state.chamber.length;
+          }
         }
         break;
-      case "タバコ": p.hp += 1; this.log(`${p.name} は タバコ を喫み、HPを1回復。（現在HP=${p.hp}）`); break;
+        case "タバコ": p.hp += 1; this.log(`${p.name} は タバコ を喫み、HPを1回復。（現在HP=${p.hp}）`); break;
       case "手錠":
         let nextOpp = null;
         for(let i=1;i<this.state.players.length;i++){
@@ -538,8 +558,13 @@ class ShotgunRouletteApp {
   }
 }
 
-/* ====== Mount app ====== */
+/* ====== Mount ====== */
 document.addEventListener("DOMContentLoaded", () => {
-  window.app = new ShotgunRouletteApp();
+  const app = new ShotgunRouletteApp();
+  window.app = app;
   app.boot();
+
+  // STARTの後にゲームビューへフォーカス
+  const navGame = document.getElementById("navGame");
+  if(navGame) navGame.addEventListener("click", ()=> location.hash = "#/game");
 });

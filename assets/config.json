@@ -9,15 +9,15 @@
     "P4": "assets/avatars/p4.png"
   },
   "icons": {
-    "ノコギリ": "assets/icons/saw.png",
-    "拡大鏡": "assets/icons/glass.png",
-    "ビール": "assets/icons/beer.png",
-    "タバコ": "assets/icons/smoke.png",
-    "手錠": "assets/icons/cuff.png"
+    "ノコギリ": "assets/icons/saw.jpg",
+    "拡大鏡": "assets/icons/glass.jpg",
+    "ビール": "assets/icons/beer.jpg",
+    "タバコ": "assets/icons/smoke.jpg",
+    "手錠": "assets/icons/cuff.jpg"
   },
   "sounds": {
-    "blank": "assets/sounds/blank.mp3",
-    "live": "assets/sounds/live.mp3",
+    "blank": "assets/sounds/blank.ogg",
+    "live": "assets/sounds/live.ogg",
     "click": "assets/sounds/click.mp3",
     "volume": {
       "master": 1,

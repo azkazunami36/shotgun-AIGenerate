@@ -1,144 +1,61 @@
 <!doctype html>
 <html lang="ja">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>ショットガン・ルーレット（デジタル版 ver.α0.11 / solid build）</title>
-  <link rel="stylesheet" href="shotgun_roulette_alpha0_12.css">
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>ショットガン・ルーレット ver.α0.13</title>
+  <link rel="stylesheet" href="shotgun_roulette_alpha0_13.css">
 </head>
 <body>
+  <!-- 固定ヘルプ（左端 ? ボタン） -->
+  <button id="helpToggle" class="help-fab" aria-label="アイテム説明">?</button>
+  <aside id="helpPanel" class="help-panel" aria-hidden="true">
+    <div class="help-head">
+      <div>アイテム説明</div>
+      <button id="helpClose" class="btn small">閉じる</button>
+    </div>
+    <ul class="help-list">
+      <li><b>ノコギリ</b>：次の命中ダメージが <b>2倍</b> になる（一回限り）。</li>
+      <li><b>拡大鏡</b>：次に撃たれる弾（先頭弾）が <b>実弾/空包</b> か確認できる。</li>
+      <li><b>ビール</b>：次の弾を <b>排莢</b> して捨てる（薬室から1発除去）。</li>
+      <li><b>タバコ</b>：自分の <b>HP+1</b>。</li>
+      <li><b>手錠</b>：次のプレイヤーのターンを <b>スキップ</b>。</li>
+    </ul>
+  </aside>
+
+  <!-- SPAナビゲーション -->
+  <header class="topbar">
+    <nav class="nav">
+      <a href="#/game" id="navGame" class="nav-link">ゲーム</a>
+      <a href="#/settings" id="navSettings" class="nav-link">ゲーム設定</a>
+      <span class="ver">ver.α0.13</span>
+    </nav>
+  </header>
 
   <!-- タイトル画面 -->
-  <div id="titleScreen">
+  <div id="titleScreen" class="title-screen">
     <h1>ショットガン・ルーレット</h1>
-    <p>digital edition — ver.α0.11（assets + localStorage + volume）</p>
-    <button id="startBtnTitle">START</button>
-    <div class="small" style="margin-top:6px;">※最初のクリックでサウンドを有効化</div>
+    <p>digital edition — assets + localStorage + volume</p>
+    <button id="startBtnTitle" class="btn primary big">START</button>
+    <div class="small">※最初のクリックでサウンドを有効化</div>
   </div>
 
-  <!-- フラッシュ演出 -->
+  <!-- 視認フラッシュ -->
   <div id="flashOverlay"></div>
 
-  <!-- 設定モーダル（assetsを基準、localStorageで上書き） -->
-  <div id="settingsModal">
-    <div id="settingsBackdrop"></div>
-    <div id="settingsPanel">
-      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
-        <h2>UI画像・テーマ設定（assets → localStorage 上書き）</h2>
-        <div>
-          <button id="presetDefault" class="small">プリセット: デフォルト</button>
-          <button id="presetWood" class="small">プリセット: 木目</button>
-          <button id="closeSettings" class="small">閉じる</button>
-        </div>
-      </div>
-
-      <div class="grid">
-        <div class="panel">
-          <h3 style="margin:0 0 8px 0;">サウンド設定</h3>
-          <div class="row small">弾発射やクリック音の音源URL（assets設定 or data URL も可）。</div>
-          <div class="row">
-            <label style="width:60px;">空包</label><input id="sndBlankUrl" type="url" placeholder="空包音…" style="flex:1;">
-          </div>
-          <div class="row">
-            <label style="width:60px;">実弾</label><input id="sndLiveUrl" type="url" placeholder="実弾音…" style="flex:1;">
-          </div>
-          <div class="row">
-            <label style="width:60px;">クリック</label><input id="sndClickUrl" type="url" placeholder="クリック音…" style="flex:1;">
-          </div>
-          <div class="row volrow">
-            <span>Master</span><input id="volMaster" type="range" min="0" max="1" step="0.01"><span id="volMasterLabel" class="small">100%</span>
-          </div>
-          <div class="row volrow">
-            <span>空包</span><input id="volBlank" type="range" min="0" max="1" step="0.01"><span id="volBlankLabel" class="small">100%</span>
-          </div>
-          <div class="row volrow">
-            <span>実弾</span><input id="volLive" type="range" min="0" max="1" step="0.01"><span id="volLiveLabel" class="small">100%</span>
-          </div>
-          <div class="row volrow">
-            <span>クリック</span><input id="volClick" type="range" min="0" max="1" step="0.01"><span id="volClickLabel" class="small">100%</span>
-          </div>
-          <div class="row"><button id="soundsApply">サウンド適用</button> <button id="testBlank">空包テスト</button> <button id="testLive">実弾テスト</button> <button id="testClick">クリックテスト</button></div>
-          <div class="small">※再生されない場合は、タイトル画面の START を押してからテストしてください（自動再生制限）。</div>
-        </div>
-
-        <div class="panel">
-          <h3 style="margin:0 0 8px 0;">背景画像</h3>
-          <div class="row">
-            <input id="bgUrl" type="url" placeholder="画像URL / data URL…" style="flex:1;">
-            <button id="bgApply">適用</button>
-          </div>
-          <div class="preview" id="bgPreview"></div>
-          <div class="help">ローカル画像は data URL で貼り付け可（localStorage上限に注意）。</div>
-        </div>
-
-        <div class="panel">
-          <h3 style="margin:0 0 8px 0;">パネル背景</h3>
-          <div class="row">
-            <input id="panelUrl" type="url" placeholder="画像URL / data URL…" style="flex:1;">
-            <button id="panelApply">適用</button>
-          </div>
-          <div class="preview" id="panelPreview"></div>
-        </div>
-
-        <div class="panel">
-          <h3 style="margin:0 0 8px 0;">フラッシュ色</h3>
-          <div class="row">
-            <input id="flashColor" type="color" value="#ffffff">
-            <button id="flashTest">テスト</button>
-          </div>
-          <div class="help">実弾時に画面が点滅する色。</div>
-        </div>
-
-        <div class="panel">
-          <h3 style="margin:0 0 8px 0;">プレイヤーアバター</h3>
-          <div class="row small">P1〜P4のURL / data URL を保存。<b>localStorage が assets より常に優先</b>。</div>
-          <div class="row"><span class="icon-preview" id="p1Prev"></span><input id="p1Url" type="url" placeholder="P1画像…" style="flex:1;"></div>
-          <div class="row"><span class="icon-preview" id="p2Prev"></span><input id="p2Url" type="url" placeholder="P2画像…" style="flex:1;"></div>
-          <div class="row"><span class="icon-preview" id="p3Prev"></span><input id="p3Url" type="url" placeholder="P3画像…" style="flex:1;"></div>
-          <div class="row"><span class="icon-preview" id="p4Prev"></span><input id="p4Url" type="url" placeholder="P4画像…" style="flex:1;"></div>
-          <div class="row"><button id="avatarsApply">アバター適用</button></div>
-        </div>
-
-        <div class="panel">
-          <h3 style="margin:0 0 8px 0;">アイテムアイコン</h3>
-          <div class="row small">各アイテム名に対応する画像URL / data URL。</div>
-          <div class="row"><span class="icon-preview" id="icoSawPrev"></span><input id="icoSaw" type="url" placeholder="ノコギリ…" style="flex:1;"></div>
-          <div class="row"><span class="icon-preview" id="icoGlassPrev"></span><input id="icoGlass" type="url" placeholder="拡大鏡…" style="flex:1;"></div>
-          <div class="row"><span class="icon-preview" id="icoBeerPrev"></span><input id="icoBeer" type="url" placeholder="ビール…" style="flex:1;"></div>
-          <div class="row"><span class="icon-preview" id="icoSmokePrev"></span><input id="icoSmoke" type="url" placeholder="タバコ…" style="flex:1;"></div>
-          <div class="row"><span class="icon-preview" id="icoCuffPrev"></span><input id="icoCuff" type="url" placeholder="手錠…" style="flex:1;"></div>
-          <div class="row"><button id="iconsApply">アイコン適用</button></div>
-        </div>
-      </div>
-
-      <div style="margin-top:12px; display:flex; justify-content:space-between; align-items:center;">
-        <div class="help">保存先キー: <b>sg_roulette_theme_v011</b>（ブラウザ毎）。容量は概ね 5MB 目安。</div>
-        <div>
-          <button id="saveTheme">保存</button>
-          <button id="exportTheme">エクスポート</button>
-          <input id="importThemeFile" type="file" accept="application/json" style="display:none;">
-          <button id="importTheme">インポート</button>
-          <button id="resetTheme" class="btn-danger">リセット</button>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- アプリ本体 -->
-  <div id="app" style="display:none;">
+  <!-- ビュー: ゲーム本体 -->
+  <main id="view-game" class="view hidden">
     <div class="toolbar">
-      <button id="openSettings">⚙️ UI設定</button>
-      <button id="muteToggle">🔇 ミュート</button>
-      <div class="volrow" style="min-width:220px;">
+      <button id="openSettings" class="btn">⚙️ UI設定</button>
+      <button id="muteToggle" class="btn">🔇 ミュート</button>
+      <div class="volrow">
         <span>Master</span>
-        <input id="volMasterToolbar" type="range" min="0" max="1" step="0.01" style="width:160px;">
+        <input id="volMasterToolbar" type="range" min="0" max="1" step="0.01">
         <span id="volMasterToolbarLabel" class="small">100%</span>
       </div>
-      <span class="small" style="opacity:0.8;">ver.α0.11 — assets優先読み込み / localStorage上書き / 音量</span>
     </div>
-    <h1>ショットガン・ルーレット（デジタル版）</h1>
 
-    <div class="controls">
+    <section class="controls">
       <div class="panel">
         <label>プレイヤー数</label>
         <select id="playerCount">
@@ -156,13 +73,12 @@
         <label>実弾数（薬室内）</label>
         <input type="number" id="liveCount" value="3" min="0" max="12" />
 
-        <div style="margin-top:8px;">
-          <button id="startBtn" class="btn-primary">ゲーム開始</button>
-          <button id="resetBtn" class="btn-danger">リセット</button>
+        <div class="mt8">
+          <button id="startBtn" class="btn primary">ゲーム開始</button>
+          <button id="resetBtn" class="btn danger">リセット</button>
         </div>
-        <div style="margin-top:8px; font-size:13px; color:#bbb;">
-          ※ 毎ラウンド開始時に各プレイヤーにランダムでアイテムを3枚配布します。<br>
-          ※ 使用可能アイテム：ノコギリ、拡大鏡、ビール、タバコ、手錠
+        <div class="mt8 small muted">
+          ※ アイテム：ノコギリ / 拡大鏡 / ビール / タバコ / 手錠
         </div>
       </div>
 
@@ -170,53 +86,149 @@
         <div class="big">現在ラウンド: <span id="roundNo">0</span></div>
         <div class="chamber">残薬室: <span id="chamberRemain">0</span> / <span id="chamberTotal">0</span></div>
         <div>先頭弾の状態: <span id="peekState">不明</span></div>
-        <div style="margin-top:8px;">現在ターン: <span id="currentPlayer">-</span></div>
-        <div style="margin-top:8px;" class="actions">
+        <div class="mt8">現在ターン: <span id="currentPlayer">-</span></div>
+        <div class="mt8 actions">
           <select id="targetSelect" class="target-select"></select>
-          <button id="shootBtn">撃つ</button>
-          <button id="shootSelfBtn">自分に撃つ</button>
+          <button id="shootBtn" class="btn">撃つ</button>
+          <button id="shootSelfBtn" class="btn">自分に撃つ</button>
         </div>
-        <div style="margin-top:8px;">
-          <button id="endTurnBtn">ターン終了</button>
+        <div class="mt8">
+          <button id="endTurnBtn" class="btn">ターン終了</button>
         </div>
       </div>
 
-      <div class="panel" style="flex:1; min-width:260px;">
-        <div style="font-weight:700; margin-bottom:8px;">プレイヤー一覧</div>
+      <div class="panel flex1 minw260">
+        <div class="bold mb8">プレイヤー一覧</div>
         <div id="playersContainer" class="players"></div>
       </div>
-    </div>
+    </section>
 
-    <div class="game">
-      <div class="panel" style="flex:1;">
-        <div style="font-weight:700; margin-bottom:8px;">行動ログ</div>
+    <section class="game">
+      <div class="panel flex1">
+        <div class="bold mb8">行動ログ</div>
         <div id="log" class="log"></div>
-        <div style="margin-top:8px;">
-          <button id="clearLog">ログクリア</button>
-        </div>
+        <div class="mt8"><button id="clearLog" class="btn">ログクリア</button></div>
       </div>
 
-      <div class="panel" style="width:340px;">
-        <div style="font-weight:700; margin-bottom:8px;">アイテム操作</div>
+      <div class="panel w340">
+        <div class="bold mb8">アイテム操作</div>
         <div id="itemControls">
           <div>自分のアイテムをクリックして使用してください（ターン中のみ）。</div>
-          <div style="margin-top:8px;" id="yourItems"></div>
+          <div class="mt8" id="yourItems"></div>
         </div>
 
-        <div style="margin-top:12px;">
-          <div style="font-weight:700; margin-bottom:6px;">拡大鏡で覗いた情報</div>
+        <div class="mt12">
+          <div class="bold mb6">拡大鏡で覗いた情報</div>
           <div id="peekArea" class="peek-indicator">なし</div>
         </div>
       </div>
-    </div>
+    </section>
 
-    <footer>バージョン: α0.10 — 安定版：assets/config.json → localStorage 上書き、音量コントロール、効果音修正、実弾フラッシュ</footer>
+    <footer class="footer">バージョン: α0.13 — SPA(ゲーム/ゲーム設定)・アイテム説明・残薬室の非表示オプション</footer>
+  </main>
+
+  <!-- ビュー: ゲーム設定 -->
+  <main id="view-settings" class="view hidden">
+    <h2>ゲーム設定</h2>
+    <div class="panel w560">
+      <div class="row">
+        <label class="chk">
+          <input id="optHideChamberRemain" type="checkbox">
+          残薬室を非表示にする
+        </label>
+      </div>
+      <div class="row small muted">
+        非表示にすると、ゲーム画面の「残薬室」は「??」と表示されます。
+      </div>
+      <div class="mt12">
+        <button id="saveGameOpts" class="btn primary">保存</button>
+        <span id="saveGameOptsResult" class="small" aria-live="polite"></span>
+      </div>
+    </div>
+    <div class="mt12">
+      <a class="btn" href="#/game">← ゲームへ戻る</a>
+    </div>
+  </main>
+
+  <!-- 設定モーダル（UI画像・サウンドは従来と同じ、ゲーム設定は別ページで管理） -->
+  <div id="settingsModal" class="modal hidden">
+    <div id="settingsBackdrop" class="backdrop"></div>
+    <div id="settingsPanel" class="panel modal-panel">
+      <div class="modal-head">
+        <h2>UI画像・テーマ設定（assets → localStorage 上書き）</h2>
+        <button id="closeSettings" class="btn small">閉じる</button>
+      </div>
+
+      <div class="grid">
+        <div class="panel">
+          <h3>サウンド設定</h3>
+          <div class="row small muted">URL または data URL を入力すると適用されます。</div>
+          <div class="row"><label>空包</label><input id="sndBlankUrl" type="url" placeholder="空包音URL"></div>
+          <div class="row"><label>実弾</label><input id="sndLiveUrl" type="url" placeholder="実弾音URL"></div>
+          <div class="row"><label>クリック</label><input id="sndClickUrl" type="url" placeholder="クリック音URL"></div>
+          <div class="row volrow"><span>Master</span><input id="volMaster" type="range" min="0" max="1" step="0.01"><span id="volMasterLabel" class="small">100%</span></div>
+          <div class="row volrow"><span>空包</span><input id="volBlank" type="range" min="0" max="1" step="0.01"><span id="volBlankLabel" class="small">100%</span></div>
+          <div class="row volrow"><span>実弾</span><input id="volLive" type="range" min="0" max="1" step="0.01"><span id="volLiveLabel" class="small">100%</span></div>
+          <div class="row volrow"><span>クリック</span><input id="volClick" type="range" min="0" max="1" step="0.01"><span id="volClickLabel" class="small">100%</span></div>
+          <div class="row"><button id="soundsApply" class="btn">サウンド適用</button> <button id="testBlank" class="btn small">空包テスト</button> <button id="testLive" class="btn small">実弾テスト</button> <button id="testClick" class="btn small">クリックテスト</button></div>
+        </div>
+
+        <div class="panel">
+          <h3>背景画像</h3>
+          <div class="row"><input id="bgUrl" type="url" placeholder="画像URL / data URL…"><button id="bgApply" class="btn small">適用</button></div>
+          <div class="preview" id="bgPreview"></div>
+        </div>
+
+        <div class="panel">
+          <h3>パネル背景</h3>
+          <div class="row"><input id="panelUrl" type="url" placeholder="画像URL / data URL…"><button id="panelApply" class="btn small">適用</button></div>
+          <div class="preview" id="panelPreview"></div>
+        </div>
+
+        <div class="panel">
+          <h3>フラッシュ色</h3>
+          <div class="row"><input id="flashColor" type="color" value="#ffffff"><button id="flashTest" class="btn small">テスト</button></div>
+        </div>
+
+        <div class="panel">
+          <h3>プレイヤーアバター</h3>
+          <div class="row small muted">localStorage が assets より常に優先</div>
+          <div class="row"><span class="icon-preview" id="p1Prev"></span><input id="p1Url" type="url" placeholder="P1画像…"></div>
+          <div class="row"><span class="icon-preview" id="p2Prev"></span><input id="p2Url" type="url" placeholder="P2画像…"></div>
+          <div class="row"><span class="icon-preview" id="p3Prev"></span><input id="p3Url" type="url" placeholder="P3画像…"></div>
+          <div class="row"><span class="icon-preview" id="p4Prev"></span><input id="p4Url" type="url" placeholder="P4画像…"></div>
+          <div class="row"><button id="avatarsApply" class="btn small">アバター適用</button></div>
+        </div>
+
+        <div class="panel">
+          <h3>アイテムアイコン</h3>
+          <div class="row"><span class="icon-preview" id="icoSawPrev"></span><input id="icoSaw" type="url" placeholder="ノコギリ…"></div>
+          <div class="row"><span class="icon-preview" id="icoGlassPrev"></span><input id="icoGlass" type="url" placeholder="拡大鏡…"></div>
+          <div class="row"><span class="icon-preview" id="icoBeerPrev"></span><input id="icoBeer" type="url" placeholder="ビール…"></div>
+          <div class="row"><span class="icon-preview" id="icoSmokePrev"></span><input id="icoSmoke" type="url" placeholder="タバコ…"></div>
+          <div class="row"><span class="icon-preview" id="icoCuffPrev"></span><input id="icoCuff" type="url" placeholder="手錠…"></div>
+          <div class="row"><button id="iconsApply" class="btn small">アイコン適用</button></div>
+        </div>
+      </div>
+
+      <div class="mt12 modal-foot">
+        <div class="small muted">保存先キー: <b>sg_roulette_theme_v013</b></div>
+        <div class="row">
+          <button id="saveTheme" class="btn">保存</button>
+          <button id="exportTheme" class="btn">エクスポート</button>
+          <input id="importThemeFile" type="file" accept="application/json" style="display:none;">
+          <button id="importTheme" class="btn">インポート</button>
+          <button id="resetTheme" class="btn danger">リセット</button>
+        </div>
+      </div>
+    </div>
   </div>
 
-<!-- Audio elements -->
-<audio id="sndBlank" preload="auto"></audio>
-<audio id="sndLive" preload="auto"></audio>
-<audio id="sndClick" preload="auto"></audio>
-  <script src="shotgun_roulette_alpha0_12.js"></script>
+  <!-- Audio elements -->
+  <audio id="sndBlank" preload="auto"></audio>
+  <audio id="sndLive" preload="auto"></audio>
+  <audio id="sndClick" preload="auto"></audio>
+
+  <script src="shotgun_roulette_alpha0_13.js"></script>
 </body>
 </html>
