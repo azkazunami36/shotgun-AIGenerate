@@ -569,9 +569,12 @@ function startGame(){
   resetAll();
   state.playerCount = parseInt(el("playerCount").value);
   state.initHp = parseInt(el("initHp").value);
-  const chamberSize = parseInt(el("chamberSize").value);
-  const liveCount = parseInt(el("liveCount").value);
-  if(liveCount > chamberSize){ alert("実弾数は薬室の発数以下にしてください。"); return; }
+  let chamberSize = parseInt(el("chamberSize").value);
+  let liveCount = parseInt(el("liveCount").value);
+  if(!Number.isFinite(chamberSize) || chamberSize <= 0) chamberSize = 1;
+  if(!Number.isFinite(liveCount) || liveCount < 0) liveCount = 0;
+  if(liveCount > chamberSize){ liveCount = chamberSize; }
+
   state.players = [];
   for(let i=0;i<state.playerCount;i++){
     state.players.push({
@@ -588,11 +591,18 @@ function startGame(){
   announceTurn();
 }
 function buildChamber(size, liveCount){
+  // Sanitize & clamp
+  let s = parseInt(size); let l = parseInt(liveCount);
+  if(!Number.isFinite(s) || s <= 0) s = 1;
+  if(!Number.isFinite(l) || l < 0) l = 0;
+  if(l > s) l = s;
   const arr = [];
-  for(let i=0;i<liveCount;i++) arr.push("live");
-  for(let i=0;i<size-liveCount;i++) arr.push("blank");
-  shuffle(arr); state.chamber = arr; state.chamberTotal = size;
-  el("chamberTotal").innerText = size;
+  for(let i=0;i<l;i++) arr.push("live");
+  for(let i=0;i<s-l;i++) arr.push("blank");
+  shuffle(arr);
+  state.chamber = arr;
+  state.chamberTotal = s;
+  el("chamberTotal").innerText = s;
   el("chamberRemain").innerText = state.chamber.length;
 }
 function distributeItemsToAll(){
