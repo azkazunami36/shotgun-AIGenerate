@@ -1,0 +1,541 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>ショットガン・ルーレット（デジタル版 ver.α0.5 内部ファイル対応）</title>
+<style>
+  :root{
+    --bg:#111; --panel:#1b1b1b; --sub:#141414; --text:#eee; --muted:#bbb;
+    --chip:#222; --accent:#1b5b3b; --danger:#5b1b1b;
+    --bg-image:none; --panel-image:none; --flash-color:#ffffff;
+  }
+  *{box-sizing:border-box;}
+  body{
+    font-family: "Yu Gothic UI", "Hiragino Kaku Gothic ProN", "Meiryo", sans-serif;
+    background:var(--bg);
+    background-image: var(--bg-image);
+    background-size:cover; background-position:center; background-attachment:fixed;
+    color:var(--text); padding:16px; margin:0;
+  }
+  h1{margin:0 0 12px 0; font-size:20px;}
+  .controls, .game {display:flex; gap:16px; margin-bottom:12px; flex-wrap:wrap;}
+  .panel{
+    background:var(--panel);
+    background-image: var(--panel-image);
+    background-size:cover; background-position:center;
+    padding:12px; border-radius:8px; box-shadow:0 2px 6px rgba(0,0,0,0.6); min-width:220px;
+  }
+  label{display:block; margin-bottom:6px; font-size:13px; color:#ccc;}
+  input, select, button{padding:6px 8px; border-radius:6px; border:1px solid #333; background:#121212; color:var(--text);}
+  button{cursor:pointer;}
+  .players{display:flex; gap:12px; flex-wrap:wrap;}
+  .player{padding:8px; border-radius:6px; background:var(--sub); min-width:200px; display:grid; grid-template-columns:48px 1fr; grid-gap:8px; align-items:center;}
+  .player.dead{opacity:0.35; text-decoration:line-through;}
+  .avatar{width:48px; height:48px; border-radius:6px; background:#000 center/cover no-repeat;}
+  .hp{font-weight:700; color:#ffb3b3;}
+  .items{margin-top:8px;}
+  .item{display:inline-flex; align-items:center; gap:6px; padding:4px 6px; margin:4px 4px 0 0; background:var(--chip); border-radius:6px; font-size:13px;}
+  .item .icon{width:16px; height:16px; background:center/cover no-repeat;}
+  .log{height:240px; overflow:auto; background:#0f0f0f; padding:8px; border-radius:6px; font-size:13px;}
+  .chamber{font-size:13px; color:#ccc; margin-top:8px;}
+  .big{font-size:16px;}
+  .actions{margin-top:8px; display:flex; gap:8px; flex-wrap:wrap;}
+  .target-select{width:100%;}
+  .peek-indicator{font-weight:700; color:#ffd27f;}
+  footer{margin-top:12px; font-size:12px; color:#888;}
+  .btn-danger{background:var(--danger);}
+  .btn-primary{background:var(--accent);}
+
+  /* タイトル */
+  #titleScreen{
+    position:fixed; inset:0; z-index:1000;
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    background:radial-gradient(1200px 800px at 50% 40%, #222 0%, #000 70%);
+    color:#f5f5f5; text-align:center;
+  }
+  #titleScreen h1{font-size:40px; letter-spacing:1px; margin:0;}
+  #titleScreen p{margin:8px 0 0 0; color:#d0d0d0;}
+  #startBtnTitle{margin-top:24px; padding:12px 24px; font-size:18px; border:1px solid #333; background:#162b22;}
+
+  /* フラッシュ */
+  #flashOverlay{ position:fixed; inset:0; background:var(--flash-color); opacity:0; pointer-events:none; z-index:999; }
+  @keyframes flashEffect{ 0%{opacity:0;} 15%{opacity:1;} 100%{opacity:0;} }
+</style>
+</head>
+<body>
+  <!-- タイトル画面 -->
+  <div id="titleScreen">
+    <h1>ショットガン・ルーレット</h1>
+    <p>digital edition — ver.α0.5（内部ファイルでスキン差し替え）</p>
+    <button id="startBtnTitle">START</button>
+  </div>
+
+  <!-- フラッシュ演出 -->
+  <div id="flashOverlay"></div>
+
+  <!-- アプリ本体 -->
+  <div id="app" style="display:none;">
+    <div style="display:flex; gap:8px; align-items:center; margin-bottom:8px;">
+      <span class="small" style="opacity:0.8;">assets/config.json を編集してスキン変更できます</span>
+      <button id="reloadSkin">スキン再読込</button>
+    </div>
+    <h1>ショットガン・ルーレット（デジタル版）</h1>
+
+    <div class="controls">
+      <div class="panel">
+        <label>プレイヤー数</label>
+        <select id="playerCount">
+          <option value="2">2</option>
+          <option value="3">3</option>
+          <option value="4" selected>4</option>
+        </select>
+
+        <label>初期HP（各プレイヤー）</label>
+        <input type="number" id="initHp" value="5" min="1" max="20" />
+
+        <label>薬室（合計発数）</label>
+        <input type="number" id="chamberSize" value="6" min="1" max="12" />
+
+        <label>実弾数（薬室内）</label>
+        <input type="number" id="liveCount" value="3" min="0" max="12" />
+
+        <div style="margin-top:8px;">
+          <button id="startBtn" class="btn-primary">ゲーム開始</button>
+          <button id="resetBtn" class="btn-danger">リセット</button>
+        </div>
+        <div style="margin-top:8px; font-size:13px; color:#bbb;">
+          ※ 毎ラウンド開始時に各プレイヤーにランダムでアイテムを3枚配布します。<br>
+          ※ 使用可能アイテム：ノコギリ、拡大鏡、ビール、タバコ、手錠
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="big">現在ラウンド: <span id="roundNo">0</span></div>
+        <div class="chamber">残薬室: <span id="chamberRemain">0</span> / <span id="chamberTotal">0</span></div>
+        <div>先頭弾の状態: <span id="peekState">不明</span></div>
+        <div style="margin-top:8px;">現在ターン: <span id="currentPlayer">-</span></div>
+        <div style="margin-top:8px;" class="actions">
+          <select id="targetSelect" class="target-select"></select>
+          <button id="shootBtn">撃つ</button>
+          <button id="shootSelfBtn">自分に撃つ</button>
+        </div>
+        <div style="margin-top:8px;">
+          <button id="endTurnBtn">ターン終了</button>
+        </div>
+      </div>
+
+      <div class="panel" style="flex:1; min-width:260px;">
+        <div style="font-weight:700; margin-bottom:8px;">プレイヤー一覧</div>
+        <div id="playersContainer" class="players"></div>
+      </div>
+    </div>
+
+    <div class="game">
+      <div class="panel" style="flex:1;">
+        <div style="font-weight:700; margin-bottom:8px;">行動ログ</div>
+        <div id="log" class="log"></div>
+        <div style="margin-top:8px;">
+          <button id="clearLog">ログクリア</button>
+        </div>
+      </div>
+
+      <div class="panel" style="width:340px;">
+        <div style="font-weight:700; margin-bottom:8px;">アイテム操作</div>
+        <div id="itemControls">
+          <div>自分のアイテムをクリックして使用してください（ターン中のみ）。</div>
+          <div style="margin-top:8px;" id="yourItems"></div>
+        </div>
+
+        <div style="margin-top:12px;">
+          <div style="font-weight:700; margin-bottom:6px;">拡大鏡で覗いた情報</div>
+          <div id="peekArea" class="peek-indicator">なし</div>
+        </div>
+      </div>
+    </div>
+
+    <footer>バージョン: α0.5 — 内部ファイル（assets/config.json / images）でUIスキン差し替え</footer>
+  </div>
+
+<!-- デフォルト設定（外部ファイルが見つからない場合に使用） -->
+<script type="application/json" id="defaultSkin">
+{
+  "flashColor": "#ffffff",
+  "background": null,
+  "panel": null,
+  "avatars": {
+    "P1": null, "P2": null, "P3": null, "P4": null
+  },
+  "icons": {
+    "ノコギリ": null, "拡大鏡": null, "ビール": null, "タバコ": null, "手錠": null
+  }
+}
+</script>
+
+<script>
+/* ================== スキン読込（内部ファイル） ==================
+   - assets/config.json を fetch
+   - 失敗したら <script id="defaultSkin"> のJSONを使用
+   - 画像パスは HTML と同階層の assets/ 内を想定
+===================================================================*/
+const SKIN_PATH = "assets/config.json";
+let SKIN = null;
+
+async function loadSkin(){
+  try{
+    const res = await fetch(SKIN_PATH, {cache:"no-store"});
+    if(!res.ok) throw new Error("no config");
+    SKIN = await res.json();
+    console.info("Loaded skin from assets/config.json", SKIN);
+  }catch(e){
+    const raw = document.getElementById("defaultSkin").textContent;
+    SKIN = JSON.parse(raw);
+    console.info("Using default embedded skin", SKIN);
+  }
+  applySkin();
+}
+
+function applySkin(){
+  // CSS variables
+  document.documentElement.style.setProperty("--bg-image", SKIN.background? `url(${SKIN.background})` : "none");
+  document.documentElement.style.setProperty("--panel-image", SKIN.panel? `url(${SKIN.panel})` : "none");
+  document.documentElement.style.setProperty("--flash-color", SKIN.flashColor || "#ffffff");
+  // Avatars & icons applied when rendering
+  renderPlayers();
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+  // タイトル → ゲームへ
+  const title = document.getElementById("titleScreen");
+  const app = document.getElementById("app");
+  document.getElementById("startBtnTitle").addEventListener("click", () => {
+    title.style.display = "none";
+    app.style.display = "block";
+    startGame();
+  });
+  // スキン読み込み＆リロードボタン
+  document.getElementById("reloadSkin").addEventListener("click", () => {
+    loadSkin().then(() => { renderPlayers(); });
+  });
+  // 初回スキン
+  loadSkin();
+});
+
+/* ================== ゲーム本体（α0.3準拠） ================== */
+const ITEMS = ["ノコギリ","拡大鏡","ビール","タバコ","手錠"];
+
+let state = {
+  players: [], playerCount: 4, initHp: 5,
+  chamber: [], chamberTotal: 0, round: 0,
+  currentIndex: 0, peekInfo: null,
+  autoNextOnEmptySelfShot: true
+};
+
+const el = id => document.getElementById(id);
+
+function log(msg){
+  const l = el("log");
+  const time = new Date().toLocaleTimeString();
+  l.innerHTML = `<div>[${time}] ${escapeHtml(msg)}</div>` + l.innerHTML;
+}
+function escapeHtml(s){ return s==null? "" : s.toString().replace(/&/g,'&amp;').replace(/</g,'&lt;'); }
+
+function flash(){
+  const f = el("flashOverlay");
+  f.style.animation = "flashEffect 0.28s ease";
+  f.onanimationend = () => { f.style.animation = ""; };
+}
+
+function initUI(){
+  el("startBtn").onclick = startGame;
+  el("resetBtn").onclick = resetAll;
+  el("shootBtn").onclick = () => performShoot(false);
+  el("shootSelfBtn").onclick = () => performShoot(true);
+  el("endTurnBtn").onclick = endTurn;
+  el("clearLog").onclick = () => el("log").innerHTML = "";
+}
+function resetAll(){
+  state = {
+    players: [],
+    playerCount: parseInt(el("playerCount").value),
+    initHp: parseInt(el("initHp").value),
+    chamber: [], chamberTotal: 0, round: 0,
+    currentIndex: 0, peekInfo: null, autoNextOnEmptySelfShot: true
+  };
+  updateUI();
+  el("playersContainer").innerHTML = "";
+  el("yourItems").innerHTML = "";
+  el("peekArea").innerText = "なし";
+  log("ゲームをリセットしました。");
+}
+function startGame(){
+  resetAll();
+  state.playerCount = parseInt(el("playerCount").value);
+  state.initHp = parseInt(el("initHp").value);
+  const chamberSize = parseInt(el("chamberSize").value);
+  const liveCount = parseInt(el("liveCount").value);
+  if(liveCount > chamberSize){ alert("実弾数は薬室の発数以下にしてください。"); return; }
+  state.players = [];
+  for(let i=0;i<state.playerCount;i++){
+    state.players.push({
+      id: i, name: `P${i+1}`, hp: state.initHp, alive: true, items: [],
+      skip: false, hasSawBuff: false
+    });
+  }
+  state.round = 1;
+  buildChamber(chamberSize, liveCount);
+  distributeItemsToAll();
+  state.currentIndex = 0; state.peekInfo = null;
+  updateUI();
+  log(`ゲーム開始。プレイヤー数=${state.playerCount}, 薬室=${chamberSize}, 実弾=${liveCount}`);
+  announceTurn();
+}
+function buildChamber(size, liveCount){
+  const arr = [];
+  for(let i=0;i<liveCount;i++) arr.push("live");
+  for(let i=0;i<size-liveCount;i++) arr.push("blank");
+  shuffle(arr); state.chamber = arr; state.chamberTotal = size;
+  el("chamberTotal").innerText = size;
+  el("chamberRemain").innerText = state.chamber.length;
+}
+function distributeItemsToAll(){
+  for(const p of state.players){
+    if(!p.alive) continue;
+    p.items = [];
+    for(let i=0;i<3;i++){ p.items.push(randomOf(ITEMS)); }
+  }
+  renderPlayers();
+  log(`ラウンド ${state.round} 開始。各プレイヤーにランダムで3つのアイテムを配布しました。`);
+}
+function shuffle(a){ for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; } }
+function randomOf(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
+
+function resolveAvatar(i){
+  const key = "P"+(i+1);
+  return (SKIN && SKIN.avatars && SKIN.avatars[key]) ? SKIN.avatars[key] : null;
+}
+function resolveIcon(label){
+  return (SKIN && SKIN.icons) ? (SKIN.icons[label] || null) : null;
+}
+
+function renderPlayers(){
+  const cont = el("playersContainer"); if(!cont) return;
+  cont.innerHTML = "";
+  for(let i=0;i<state.players.length;i++){
+    const p = state.players[i];
+    const div = document.createElement("div");
+    div.className = "player" + (p.alive? "":" dead");
+    div.id = "player_"+p.id;
+
+    const itemsHtml = p.items.map((it, idx)=>{
+      const iconUrl = resolveIcon(it);
+      const iconHtml = iconUrl ? `<span class="icon" style="background-image:url('${iconUrl}')"></span>` : "";
+      return `<span class="item" data-player="${p.id}" data-idx="${idx}">${iconHtml}<span>${it}</span></span>`;
+    }).join("");
+
+    const avatarUrl = resolveAvatar(i);
+    const avatarStyle = avatarUrl? `background-image:url('${avatarUrl}')` : "";
+
+    div.innerHTML = `
+      <div class="avatar" style="${avatarStyle}"></div>
+      <div>
+        <div style="font-weight:700">${p.name} ${state.currentIndex===i? "←":""}</div>
+        <div>HP: <span class="hp">${p.hp}</span></div>
+        <div>状態: ${p.alive? "生存":"脱落"}</div>
+        <div class="items">アイテム: ${itemsHtml}</div>
+        <div style="margin-top:6px; font-size:13px;">${p.skip? "（次ターンをスキップ予定）": ""}</div>
+      </div>
+    `;
+    cont.appendChild(div);
+  }
+  document.querySelectorAll('.item').forEach(elm=>{
+    elm.onclick = (e) => {
+      const pid = parseInt(elm.getAttribute('data-player'));
+      const idx = parseInt(elm.getAttribute('data-idx'));
+      if(pid !== state.currentIndex){ alert("自分のターンの時だけアイテムを使用できます。"); return; }
+      useItem(pid, idx);
+    };
+  });
+  updateYourItems();
+}
+function updateYourItems(){
+  const p = state.players[state.currentIndex];
+  if(!p){ el("yourItems").innerHTML = "なし"; return; }
+  const area = el("yourItems");
+  area.innerHTML = p.items.map((it, idx)=>{
+    const iconUrl = resolveIcon(it);
+    const iconHtml = iconUrl ? `<span class="icon" style="width:16px;height:16px; background-image:url('${iconUrl}'); display:inline-block; vertical-align:-3px; margin-right:6px;"></span>` : "";
+    return `<button data-idx="${idx}" data-player="${p.id}">${iconHtml}${it}</button>`;
+  }).join(" ");
+  area.querySelectorAll('button').forEach(btn=>{
+    btn.onclick = () => {
+      const idx = parseInt(btn.getAttribute('data-idx'));
+      if(state.currentIndex !== parseInt(btn.getAttribute('data-player'))){ alert("自分のターンの時だけ使用可能"); return; }
+      useItem(state.currentIndex, idx);
+    };
+  });
+}
+
+function updateUI(){
+  el("roundNo").innerText = state.round;
+  el("chamberRemain").innerText = state.chamber.length;
+  el("chamberTotal").innerText = state.chamberTotal;
+  el("currentPlayer").innerText = state.players[state.currentIndex]? state.players[state.currentIndex].name : "-";
+  el("peekState").innerText = state.peekInfo ? (state.peekInfo==="live"? "実弾":"空包") : "不明";
+  renderPlayers();
+  populateTargetSelect();
+}
+function populateTargetSelect(){
+  const sel = el("targetSelect"); sel.innerHTML = "";
+  const cur = state.players[state.currentIndex]; if(!cur) return;
+  for(const p of state.players){
+    if(!p.alive) continue;
+    const opt = document.createElement("option");
+    opt.value = p.id; opt.text = p.name + (p.id===cur.id? " (自分)":"");
+    sel.add(opt);
+  }
+  let defaultIndex = 0;
+  for(let i=0;i<sel.options.length;i++){
+    if(parseInt(sel.options[i].value) !== cur.id){ defaultIndex = i; break; }
+  }
+  sel.selectedIndex = defaultIndex;
+}
+
+function announceTurn(){
+  if(allDeadOrOneLeft()) return;
+  while(state.players[state.currentIndex] && !state.players[state.currentIndex].alive){
+    state.currentIndex = (state.currentIndex+1)%state.players.length;
+  }
+  const cur = state.players[state.currentIndex];
+  if(!cur) return;
+  if(cur.skip){
+    log(`${cur.name} のターンは手錠効果でスキップされました。`);
+    cur.skip = false; advanceTurn(); return;
+  }
+  updateUI();
+  log(`ターン: ${cur.name}`);
+}
+
+function performShoot(isSelf){
+  const cur = state.players[state.currentIndex];
+  if(!cur || !cur.alive){ log("行動できるプレイヤーがいません。"); return; }
+  if(state.chamber.length === 0){
+    log("薬室が空です。ラウンド終了処理を行います。");
+    endRound(); return;
+  }
+  const targetId = isSelf ? cur.id : parseInt(el("targetSelect").value);
+  const target = state.players.find(p=>p.id===targetId);
+  if(!target || !target.alive){ alert("無効なターゲットです。"); return; }
+
+  const top = state.chamber.shift();
+  state.peekInfo = null;
+  el("peekArea").innerText = "なし";
+  el("chamberRemain").innerText = state.chamber.length;
+
+  if(top === "blank"){
+    log(`${cur.name} が ${target.name} に発砲 → 空包（安心）。`);
+    if(isSelf){
+      log(`${cur.name} は空包だったため、追加で行動できます。`);
+      updateUI(); checkRoundEndAfterShot(); return;
+    } else {
+      checkRoundEndAfterShot(); advanceTurn(); return;
+    }
+  } else {
+    flash();
+    let dmg = 1;
+    if(cur.hasSawBuff){
+      dmg = 2; cur.hasSawBuff = false;
+      log(`${cur.name} のノコギリ効果でダメージが2倍になった！`);
+    }
+    target.hp -= dmg;
+    log(`${cur.name} が ${target.name} に発砲 → 実弾！ ${target.name} に ${dmg} ダメージ。残HP=${Math.max(0,target.hp)}`);
+    if(target.hp <= 0){ target.alive = false; log(`${target.name} は脱落しました。`); }
+    checkRoundEndAfterShot(); advanceTurn(); return;
+  }
+}
+function checkRoundEndAfterShot(){
+  if(state.chamber.length === 0){
+    log("このラウンドの薬室は全て撃たれました。ラウンド終了です。");
+    endRound();
+  } else { updateUI(); }
+}
+function endTurn(){ advanceTurn(); }
+function advanceTurn(){
+  if(allDeadOrOneLeft()) return;
+  let next = state.currentIndex;
+  for(let i=1;i<=state.players.length;i++){
+    const cand = (state.currentIndex + i) % state.players.length;
+    if(state.players[cand].alive){ next = cand; break; }
+  }
+  state.currentIndex = next; announceTurn();
+}
+function allDeadOrOneLeft(){
+  const alive = state.players.filter(p=>p.alive);
+  if(alive.length <= 1){
+    if(alive.length === 1){ log(`ゲーム終了！ 勝者: ${alive[0].name}`); }
+    else { log("すべてのプレイヤーが脱落しました（同時脱落）。"); }
+    updateUI(); return true;
+  }
+  return false;
+}
+function endRound(){
+  const alive = state.players.filter(p=>p.alive);
+  if(alive.length <= 1){ allDeadOrOneLeft(); return; }
+  state.round += 1;
+  const chamberSize = parseInt(el("chamberSize").value);
+  const liveCount = parseInt(el("liveCount").value);
+  buildChamber(chamberSize, liveCount);
+  distributeItemsToAll();
+  state.currentIndex = state.players.findIndex(p=>p.alive);
+  announceTurn();
+}
+
+function useItem(pid, idx){
+  const p = state.players[pid];
+  if(!p || !p.alive){ alert("使用不可"); return; }
+  if(pid !== state.currentIndex){ alert("自分のターンの時だけ使えます"); return; }
+  const item = p.items[idx];
+  if(!item){ alert("アイテムがありません"); return; }
+
+  switch(item){
+    case "ノコギリ": p.hasSawBuff = true; log(`${p.name} は ノコギリ を使用。次に命中すればダメージ2倍。`); break;
+    case "拡大鏡":
+      if(state.chamber.length === 0){ log("薬室が空のため覗けません。"); }
+      else {
+        const next = state.chamber[0]; state.peekInfo = next;
+        el("peekArea").innerText = (next==="live"?"実弾":"空包");
+        log(`${p.name} は 拡大鏡 を使い、先頭弾が「${next==="live"?"実弾":"空包"}」であることを確認した。`);
+      }
+      break;
+    case "ビール":
+      if(state.chamber.length===0){ log("薬室に弾がないため排莢できません。"); }
+      else {
+        const removed = state.chamber.shift();
+        log(`${p.name} は ビール を使用し、次の弾を排莢した（${removed==="live"?"実弾が取り除かれた":"空包が取り除かれた"}）。`);
+        el("chamberRemain").innerText = state.chamber.length;
+      }
+      break;
+    case "タバコ": p.hp += 1; log(`${p.name} は タバコ を喫み、HPを1回復。（現在HP=${p.hp}）`); break;
+    case "手錠":
+      let nextOpp = null;
+      for(let i=1;i<state.players.length;i++){
+        const cand = (state.currentIndex + i) % state.players.length;
+        if(state.players[cand].alive){ nextOpp = state.players[cand]; break; }
+      }
+      if(nextOpp){ nextOpp.skip = true; log(`${p.name} は 手錠 を使用。次のプレイヤー ${nextOpp.name} のターンを飛ばす。`); }
+      else { log("スキップ対象が見つからないため手錠は効果がなかった。"); }
+      break;
+    default: log("未定義のアイテム");
+  }
+
+  p.items.splice(idx,1);
+  renderPlayers(); updateYourItems(); updateUI();
+  log(`（${p.name} のターン継続：アイテム使用はターンを消費しません）`);
+}
+
+function updateYourItems(){ /* replaced earlier */ }
+initUI();
+resetAll();
+</script>
+</body>
+</html>
