@@ -8,6 +8,12 @@
     "P3": "assets/avatars/p3.png",
     "P4": "assets/avatars/p4.png"
   },
+  "damageAvatars": {
+    "P1": "assets/avatars/p1.png",
+    "P2": "assets/avatars/p2.png",
+    "P3": "assets/avatars/p3.png",
+    "P4": "assets/avatars/p4.png"
+  },
   "icons": {
     "ノコギリ": "assets/icons/saw.jpg",
     "拡大鏡": "assets/icons/glass.jpg",
