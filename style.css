@@ -106,7 +106,10 @@ main {
   width: 16px;
   height: 16px;
   margin-right: 4px;
-  background: #fff center/contain no-repeat;
+  background-color: #fff;      /* 背景のみ白 */
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: contain;    /* 比率維持で収める */
   vertical-align: middle;
 }
 
@@ -116,7 +119,8 @@ main {
   content: "";
   position: absolute;
   inset: 0;
-  border-radius: 6px;
-  box-shadow: inset 0 0 0 9999px rgba(255, 0, 0, 0.12);
-  pointer-events: none; /* ← これでマウス操作が素通り */
+  border-radius: inherit;      /* 親の角丸に追従 */
+  box-shadow: inset 0 0 0 9999px rgba(255, 0, 0, 0.25);
+  pointer-events: none;        /* クリック無効化しない */
+  z-index: 5;                  /* 前面に表示 */
 }
