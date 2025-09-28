@@ -1,122 +1,122 @@
-/* ====== 基本レイアウトと変数 ====== */
-:root {
-  --bg-color: #222;
-  --panel-bg: #333;
-  --text-color: #fff;
-  --accent: #e33;
-  --avatar-size: 64px;
+:root{
+  --bg:#111; --panel:#1b1b1b; --sub:#141414; --text:#eee; --muted:#bbb;
+  --chip:#222; --accent:#1b5b3b; --danger:#5b1b1b;
+  --bg-image:none; --panel-image:none; --flash-color:#ffffff;
 }
+*{box-sizing:border-box;}
+body{
+  font-family: "Yu Gothic UI","Hiragino Kaku Gothic ProN","Meiryo",system-ui,sans-serif;
+  background:var(--bg);
+  background-image:var(--bg-image);
+  background-size:cover; background-position:center; background-attachment:fixed;
+  color:var(--text); margin:0; padding:0;
+}
+a{color:inherit; text-decoration:none}
+.hidden{display:none !important;}
+.small{font-size:12px}
+.bold{font-weight:700}
+.muted{color:#bbb}
+.mt8{margin-top:8px} .mt12{margin-top:12px} .mb6{margin-bottom:6px} .mb8{margin-bottom:8px}
+.flex1{flex:1} .minw260{min-width:260px} .w340{width:340px} .w560{width:560px}
 
-body {
-  background: var(--bg-color);
-  color: var(--text-color);
-  font-family: sans-serif;
-  margin: 0;
-  padding: 0;
-}
+/* Nav */
+.topbar{position:sticky; top:0; background:#101010; border-bottom:1px solid #222; z-index:10;}
+.nav{display:flex; gap:12px; align-items:center; padding:8px 12px;}
+.nav-link{padding:6px 10px; border-radius:6px; border:1px solid #242424; background:#161616;}
+.nav-link.active{background:#1b2b2b;}
+.ver{margin-left:auto; opacity:.8;}
 
-header {
-  background: var(--panel-bg);
-  padding: 10px;
-  text-align: center;
-  font-size: 20px;
+/* Title */
+.title-screen{
+  position:fixed; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center;
+  background:radial-gradient(1200px 800px at 50% 40%, #222 0%, #000 70%);
+  color:#f5f5f5; text-align:center; z-index:1000;
 }
+.title-screen h1{font-size:40px; letter-spacing:1px; margin:0;}
+.title-screen p{margin:8px 0 0 0; color:#d0d0d0;}
+.btn{padding:6px 10px; border-radius:8px; border:1px solid #2c2c2c; background:#161616; color:var(--text); cursor:pointer}
+.btn.primary{background:var(--accent)} .btn.danger{background:var(--danger)}
+.btn.big{padding:10px 16px; font-size:16px}
 
-main {
-  padding: 10px;
+/* Views */
+.view{padding:16px}
+.panel{
+  background:var(--panel); background-image:var(--panel-image);
+  background-size:contain; background-position:center; /* don't crop panel texture */
+  padding:12px; border-radius:8px; box-shadow:0 2px 6px rgba(0,0,0,.6);
 }
+.grid{display:grid; grid-template-columns:1fr 1fr; gap:12px}
+.row{display:flex; gap:8px; align-items:center; flex-wrap:wrap}
+.preview{width:100%; height:120px; background:#000 center/contain no-repeat; border-radius:6px; border:1px solid #333;}
+.toolbar{display:flex; gap:8px; align-items:center; flex-wrap:wrap; margin-bottom:12px}
+.controls, .game{display:flex; gap:16px; margin-bottom:12px; flex-wrap:wrap}
+.players{display:flex; gap:12px; flex-wrap:wrap}
 
-/* ====== プレイヤー表示 ====== */
-#playersContainer {
-  display: flex;
-  gap: 12px;
-  flex-wrap: wrap;
+/* Square-safe images for avatars & icons */
+.player{padding:8px; border-radius:6px; background:#141414; min-width:200px; display:grid; grid-template-columns:48px 1fr; grid-gap:8px; align-items:center}
+.player.dead{opacity:0.35; text-decoration:line-through}
+.avatar{
+  width:48px; height:48px; border-radius:6px;
+  background:#fff center/contain no-repeat;  /* white square, contain image */
+  border:1px solid #333;
 }
+.icon-preview, .item .icon{
+  background:#fff center/contain no-repeat;  /* white square, contain */
+  border:1px solid #333;
+}
+.icon-preview{width:24px; height:24px; border-radius:4px; display:inline-block; vertical-align:middle}
+.item{display:inline-flex; align-items:center; gap:6px; padding:4px 6px; margin:4px 4px 0 0; background:#222; border-radius:6px; font-size:13px}
+.item .icon{width:16px; height:16px; border-radius:3px; display:inline-block}
 
-.player {
-  background: var(--panel-bg);
-  padding: 8px;
-  border-radius: 6px;
-  width: 180px;
-  position: relative;
-}
+.hp{font-weight:700; color:#ffb3b3}
+.items{margin-top:8px}
+.log{height:240px; overflow:auto; background:#0f0f0f; padding:8px; border-radius:6px; font-size:13px}
+.chamber{font-size:13px; color:#ccc; margin-top:8px}
+.big{font-size:16px}
+.actions{margin-top:8px; display:flex; gap:8px; flex-wrap:wrap}
+.target-select{width:100%}
+.peek-indicator{font-weight:700; color:#ffd27f}
+.footer{margin:12px 16px; font-size:12px; color:#888;}
 
-.player.dead {
-  opacity: 0.5;
-}
+/* Modal */
+.modal.hidden{display:none}
+.modal{position:fixed; inset:0; display:flex; align-items:center; justify-content:center; z-index:1100}
+.backdrop{position:absolute; inset:0; background:rgba(0,0,0,.6)}
+.modal-panel{position:relative; width:min(980px,94vw); max-height:90vh; overflow:auto}
+.modal-head{display:flex; justify-content:space-between; align-items:center; margin-bottom:8px}
+.modal-foot{display:flex; justify-content:space-between; align-items:center}
 
-.avatar {
-  width: var(--avatar-size);
-  height: var(--avatar-size);
-  background: #fff center/contain no-repeat;
-  border-radius: 6px;
-  margin-bottom: 6px;
-  position: relative;
-}
+/* Volume */
+.volrow{display:flex; align-items:center; gap:8px}
+.volrow input[type=range]{flex:1}
 
-/* ====== ポートレート枠 ====== */
-.portrait-wrap {
-  margin-top: 20px;
-  text-align: center;
-}
+/* Flash */
+#flashOverlay{ position:fixed; inset:0; background:var(--flash-color); opacity:0; pointer-events:none; z-index:999; }
+@keyframes flashEffect{ 0%{opacity:0;} 15%{opacity:1;} 100%{opacity:0;} }
 
-.portrait-frame {
-  width: 360px;
-  height: 360px;
-  margin: 0 auto;
-  background: #fff;
-  border-radius: 12px;
-  box-shadow: 0 0 8px rgba(0,0,0,0.5);
-  position: relative;
+/* Help panel & FAB */
+.help-fab{
+  position:fixed; left:10px; top:50%; transform:translateY(-50%);
+  width:36px; height:36px; border-radius:50%; border:1px solid #333; background:#181818; color:#fff;
+  z-index:1200; font-weight:700;
 }
+.help-panel{
+  position:fixed; left:0; top:0; bottom:0; width:min(340px, 90vw);
+  background:#151515; border-right:1px solid #333; padding:12px; z-index:1199;
+  box-shadow:4px 0 16px rgba(0,0,0,.5);
+  transform:translateX(-100%); transition:transform .18s ease;
+}
+.help-panel.open{ transform:translateX(0); }
+.help-head{display:flex; align-items:center; justify-content:space-between; margin-bottom:8px}
+.help-list{margin:0; padding-left:14px}
+.help-list li{margin:6px 0}
 
-.portrait-img {
-  width: 100%;
-  height: 100%;
-  background: #fff center/contain no-repeat;
-  border-radius: 12px;
-  position: relative;
-}
+/* Routing highlights */
+.nav-link.active{ outline:1px solid #2a5; }
 
-.portrait-badge {
-  position: absolute;
-  bottom: 4px;
-  left: 0;
-  right: 0;
-  text-align: center;
-  font-weight: bold;
-  color: #000;
-  background: rgba(255,255,255,0.7);
-  border-radius: 0 0 12px 12px;
-  padding: 2px 0;
-}
-
-/* ====== アイテムとアイコン ====== */
-.item {
-  display: inline-block;
-  margin: 2px;
-  padding: 2px 4px;
-  background: #444;
-  border-radius: 4px;
-  cursor: pointer;
-}
-
-.item .icon {
-  display: inline-block;
-  width: 16px;
-  height: 16px;
-  margin-right: 4px;
-  background: #fff center/contain no-repeat;
-  vertical-align: middle;
-}
-
-/* ====== ダメージ時の赤ティント ====== */
-.avatar.hurt::after,
-.portrait-img.hurt::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  border-radius: 6px;
-  box-shadow: inset 0 0 0 9999px rgba(255, 0, 0, 0.12);
-  pointer-events: none; /* ← これでマウス操作が素通り */
-}
+/* === Minimal additions for portrait and damage tint (safe, non-invasive) === */
+.portrait-wrap{ display:flex; justify-content:center; }
+.portrait-frame{ width:360px; height:360px; background:#fff; border:2px solid #333; border-radius:10px; position:relative; overflow:hidden; box-shadow:0 4px 18px rgba(0,0,0,.35); }
+.portrait-img{ position:absolute; inset:12px; background:#fff center/contain no-repeat; border-radius:6px; border:1px solid #333; }
+.portrait-badge{ position:absolute; right:10px; bottom:10px; background:rgba(0,0,0,.65); color:#fff; padding:4px 8px; border-radius:999px; font-size:12px; }
+.avatar.hurt::after, .portrait-img.hurt::after{ content:""; position:absolute; inset:0; border-radius:6px; box-shadow: inset 0 0 0 9999px rgba(255,0,0,0.12); }
