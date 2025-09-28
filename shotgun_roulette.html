@@ -3,11 +3,10 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>ショットガン・ルーレット ver.α0.16</title>
+  <title>ショットガン・ルーレット ver.α0.18</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <!-- 固定ヘルプ（左端 ? ボタン） -->
   <button id="helpToggle" class="help-fab" aria-label="アイテム説明">?</button>
   <aside id="helpPanel" class="help-panel" aria-hidden="true">
     <div class="help-head">
@@ -23,16 +22,14 @@
     </ul>
   </aside>
 
-  <!-- SPAナビゲーション -->
   <header class="topbar">
     <nav class="nav">
       <a href="#/game" id="navGame" class="nav-link">ゲーム</a>
       <a href="#/settings" id="navSettings" class="nav-link">ゲーム設定</a>
-      <span class="ver">ver.α0.16</span>
+      <span class="ver">ver.α0.18</span>
     </nav>
   </header>
 
-  <!-- タイトル画面 -->
   <div id="titleScreen" class="title-screen">
     <h1>ショットガン・ルーレット</h1>
     <p>digital edition — assets + localStorage + volume</p>
@@ -40,10 +37,8 @@
     <div class="small">※最初のクリックでサウンドを有効化</div>
   </div>
 
-  <!-- 視認フラッシュ -->
   <div id="flashOverlay"></div>
 
-  <!-- ビュー: ゲーム本体 -->
   <main id="view-game" class="view hidden">
     <div class="toolbar">
       <button id="openSettings" class="btn">⚙️ UI設定</button>
@@ -123,33 +118,20 @@
         </div>
       </div>
 
-      <!-- キャラクター表情 -->
       <div class="panel w380">
-        <div class="bold mb8">キャラクター表情</div>
+        <div class="bold mb8">キャラクター表情（現在の手番）</div>
         <div class="portrait-wrap">
           <div id="portraitFrame" class="portrait-frame">
             <div id="portraitImg" class="portrait-img"></div>
-            <div id="portraitBadge" class="portrait-badge">通常</div>
+            <div id="portraitBadge" class="portrait-badge">P?</div>
           </div>
-        </div>
-        <div class="row mt8">
-          <input id="portraitUrl" type="url" placeholder="表情画像URL / data URL…">
-          <button id="portraitApply" class="btn small">適用</button>
-        </div>
-        <div class="row mt8 expr-row">
-          <button class="btn small" data-expr="通常">通常</button>
-          <button class="btn small" data-expr="微笑">微笑</button>
-          <button class="btn small" data-expr="驚き">驚き</button>
-          <button class="btn small" data-expr="怒り">怒り</button>
-          <button class="btn small" data-expr="しょんぼり">しょんぼり</button>
         </div>
       </div>
     </section>
 
-    <footer class="footer">バージョン: α0.16 — 内部ロジックとGUI分離（GameEngine / UIController）</footer>
+    <footer class="footer">バージョン: α0.18 — HPは★表示／番号固定アバター／HP3以下でダメ顔／ポートレートは現手番</footer>
   </main>
 
-  <!-- ビュー: ゲーム設定 -->
   <main id="view-settings" class="view hidden">
     <h2>ゲーム設定</h2>
     <div class="panel w560">
@@ -172,7 +154,6 @@
     </div>
   </main>
 
-  <!-- 設定モーダル -->
   <div id="settingsModal" class="modal hidden">
     <div id="settingsBackdrop" class="backdrop"></div>
     <div id="settingsPanel" class="panel modal-panel">
@@ -206,35 +187,10 @@
           <div class="row"><input id="panelUrl" type="url" placeholder="画像URL / data URL…"><button id="panelApply" class="btn small">適用</button></div>
           <div class="preview" id="panelPreview"></div>
         </div>
-
-        <div class="panel">
-          <h3>フラッシュ色</h3>
-          <div class="row"><input id="flashColor" type="color" value="#ffffff"><button id="flashTest" class="btn small">テスト</button></div>
-        </div>
-
-        <div class="panel">
-          <h3>プレイヤーアバター</h3>
-          <div class="row small muted">localStorage が assets より常に優先</div>
-          <div class="row"><span class="icon-preview" id="p1Prev"></span><input id="p1Url" type="url" placeholder="P1画像…"></div>
-          <div class="row"><span class="icon-preview" id="p2Prev"></span><input id="p2Url" type="url" placeholder="P2画像…"></div>
-          <div class="row"><span class="icon-preview" id="p3Prev"></span><input id="p3Url" type="url" placeholder="P3画像…"></div>
-          <div class="row"><span class="icon-preview" id="p4Prev"></span><input id="p4Url" type="url" placeholder="P4画像…"></div>
-          <div class="row"><button id="avatarsApply" class="btn small">アバター適用</button></div>
-        </div>
-
-        <div class="panel">
-          <h3>アイテムアイコン</h3>
-          <div class="row"><span class="icon-preview" id="icoSawPrev"></span><input id="icoSaw" type="url" placeholder="ノコギリ…"></div>
-          <div class="row"><span class="icon-preview" id="icoGlassPrev"></span><input id="icoGlass" type="url" placeholder="拡大鏡…"></div>
-          <div class="row"><span class="icon-preview" id="icoBeerPrev"></span><input id="icoBeer" type="url" placeholder="ビール…"></div>
-          <div class="row"><span class="icon-preview" id="icoSmokePrev"></span><input id="icoSmoke" type="url" placeholder="タバコ…"></div>
-          <div class="row"><span class="icon-preview" id="icoCuffPrev"></span><input id="icoCuff" type="url" placeholder="手錠…"></div>
-          <div class="row"><button id="iconsApply" class="btn small">アイコン適用</button></div>
-        </div>
       </div>
 
       <div class="mt12 modal-foot">
-        <div class="small muted">保存先キー: <b>sg_roulette_theme_v016</b></div>
+        <div class="small muted">保存先キー: <b>sg_roulette_theme_v018</b></div>
         <div class="row">
           <button id="saveTheme" class="btn">保存</button>
           <button id="exportTheme" class="btn">エクスポート</button>
@@ -246,7 +202,6 @@
     </div>
   </div>
 
-  <!-- Audio elements -->
   <audio id="sndBlank" preload="auto"></audio>
   <audio id="sndLive" preload="auto"></audio>
   <audio id="sndClick" preload="auto"></audio>

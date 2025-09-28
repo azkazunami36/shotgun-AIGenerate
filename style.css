@@ -113,3 +113,10 @@ a{color:inherit; text-decoration:none}
 
 /* Routing highlights */
 .nav-link.active{ outline:1px solid #2a5; }
+
+/* === Minimal additions for portrait and damage tint (safe, non-invasive) === */
+.portrait-wrap{ display:flex; justify-content:center; }
+.portrait-frame{ width:360px; height:360px; background:#fff; border:2px solid #333; border-radius:10px; position:relative; overflow:hidden; box-shadow:0 4px 18px rgba(0,0,0,.35); }
+.portrait-img{ position:absolute; inset:12px; background:#fff center/contain no-repeat; border-radius:6px; border:1px solid #333; }
+.portrait-badge{ position:absolute; right:10px; bottom:10px; background:rgba(0,0,0,.65); color:#fff; padding:4px 8px; border-radius:999px; font-size:12px; }
+.avatar.hurt::after, .portrait-img.hurt::after{ content:""; position:absolute; inset:0; border-radius:6px; box-shadow: inset 0 0 0 9999px rgba(255,0,0,0.12); }
